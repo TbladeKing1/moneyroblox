@@ -1,18 +1,30 @@
--- Money Manipulation Script for Roblox
+-- Enhanced Money Manipulation Script for Roblox
 
--- Utility function to obfuscate potential money-related RemoteEvents/Functions
+-- Services
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+
+-- Utility function to reverse strings (simple obfuscation)
 local function obfuscateString(input)
     return string.reverse(input)
 end
 
--- Look for RemoteEvents/RemoteFunctions related to money
+-- Function to find RemoteEvents/RemoteFunctions related to money or currency
 local function findMoneyRelatedRemotes()
     local remotes = {}
-    for _, obj in pairs(game:GetService("ReplicatedStorage"):GetDescendants()) do
+    
+    -- Iterate over all descendants of ReplicatedStorage to find RemoteEvents/RemoteFunctions
+    for _, obj in pairs(ReplicatedStorage:GetDescendants()) do
         if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
-            -- Log all potential remotes
-            print("Found remote: " .. obj.Name)
-            if string.match(obj.Name:lower(), obfuscateString("money")) or string.match(obj.Name:lower(), obfuscateString("currency")) then
+            local lowerName = obj.Name:lower()
+            print("Found remote: " .. obj.Name)  -- Log all remotes for debugging
+
+            -- Look for remotes that might be related to money, currency, or purchases
+            if string.match(lowerName, obfuscateString("money")) or 
+               string.match(lowerName, obfuscateString("currency")) or 
+               string.match(lowerName, obfuscateString("buy")) or
+               string.match(lowerName, obfuscateString("purchase")) then
                 table.insert(remotes, obj)
                 print("Potential money-related remote: " .. obj.Name)
             end
@@ -21,28 +33,31 @@ local function findMoneyRelatedRemotes()
     return remotes
 end
 
--- Function to try manipulating money on the server
+-- Function to try modifying money through detected remotes
 local function modifyMoney(remote, amount)
     pcall(function()
         if remote:IsA("RemoteEvent") then
+            -- Fire the remote with money amount (try to simulate legitimate requests)
             remote:FireServer(amount)
         elseif remote:IsA("RemoteFunction") then
+            -- Invoke the remote function with money amount
             remote:InvokeServer(amount)
         end
     end)
 end
 
--- Continuously try to give money by firing or invoking remotes
+-- Function to continuously monitor and modify money
 local function monitorAndChangeMoney()
     local moneyRemotes = findMoneyRelatedRemotes()
+
     while true do
         for _, remote in ipairs(moneyRemotes) do
-            modifyMoney(remote, 999999999)  -- Attempt to give 999 million in-game currency
-            wait(0.1)  -- Interval to avoid spamming too quickly
+            modifyMoney(remote, 1000000)  -- Attempt to give 1 million currency
+            wait(1)  -- Adjust the wait time to avoid overloading the server
         end
-        wait(1)  -- General wait to reduce server load
+        wait(5)  -- General wait to avoid detection by anti-cheat mechanisms
     end
 end
 
--- Start money manipulation process
+-- Run the script to monitor and attempt money modification
 monitorAndChangeMoney()
