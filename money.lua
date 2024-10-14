@@ -5,11 +5,6 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
--- Obfuscation utility to reverse strings
-local function obfuscateString(input)
-    return string.reverse(input)
-end
-
 -- Keywords to identify potential remotes or stats related to money or currency
 local currencyKeywords = {
     "money", "currency", "cash", "coins", "points", "gems", "bucks", "gold", "credits"
@@ -19,7 +14,7 @@ local currencyKeywords = {
 local function isCurrencyRelated(name)
     local lowerName = name:lower()
     for _, keyword in ipairs(currencyKeywords) do
-        if string.match(lowerName, obfuscateString(keyword)) then
+        if string.match(lowerName, keyword) then
             return true
         end
     end
