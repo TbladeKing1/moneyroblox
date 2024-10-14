@@ -1,16 +1,16 @@
--- Universal Money Manipulation Script for Roblox
+-- Advanced Universal Money Manipulation Script for Roblox
 
 -- Services
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local LocalPlayer = Players.LocalPlayer
 
--- Keywords to identify potential remotes or stats related to money or currency
+-- Currency-related keywords to detect remotes or stats
 local currencyKeywords = {
-    "money", "currency", "cash", "coins", "points", "gems", "bucks", "gold", "credits"
+    "money", "currency", "cash", "coins", "points", "gems", "bucks", "gold", "credits", "funds"
 }
 
--- Function to check if a string contains any currency-related keyword
+-- Function to check if a string is related to currency
 local function isCurrencyRelated(name)
     local lowerName = name:lower()
     for _, keyword in ipairs(currencyKeywords) do
@@ -39,11 +39,11 @@ local function findCurrencyRemotes()
     return remotes
 end
 
--- Function to find player stats related to currency (leaderstats or other stats objects)
+-- Function to find player stats related to currency (leaderstats or other stats)
 local function findCurrencyStats()
     local stats = {}
 
-    -- Check the player's leaderstats or any other stats folder in their character
+    -- Check the player's leaderstats or any other stats folder
     if LocalPlayer:FindFirstChild("leaderstats") then
         for _, stat in pairs(LocalPlayer.leaderstats:GetChildren()) do
             if stat:IsA("IntValue") or stat:IsA("NumberValue") then
@@ -57,14 +57,20 @@ local function findCurrencyStats()
     return stats
 end
 
--- Function to try modifying the money through detected remotes or stats
-local function modifyCurrency(remoteOrStat, amount)
+-- Function to interact with detected remotes (sending smaller chunks to avoid detection)
+local function manipulateCurrency(remoteOrStat, amount)
     pcall(function()
         -- If it's a RemoteEvent or RemoteFunction, interact with the server
         if remoteOrStat:IsA("RemoteEvent") then
-            remoteOrStat:FireServer(amount)
+            for i = 1, amount / 100000 do
+                remoteOrStat:FireServer(100000)  -- Fire small amounts in chunks of 100,000
+                wait(math.random(0.2, 0.5))  -- Randomized wait time to avoid detection
+            end
         elseif remoteOrStat:IsA("RemoteFunction") then
-            remoteOrStat:InvokeServer(amount)
+            for i = 1, amount / 100000 do
+                remoteOrStat:InvokeServer(100000)  -- Invoke small amounts in chunks of 100,000
+                wait(math.random(0.2, 0.5))  -- Randomized wait time to avoid detection
+            end
         -- If it's a stat (leaderstats), modify the value directly
         elseif remoteOrStat:IsA("IntValue") or remoteOrStat:IsA("NumberValue") then
             remoteOrStat.Value = remoteOrStat.Value + amount
@@ -73,27 +79,26 @@ local function modifyCurrency(remoteOrStat, amount)
     end)
 end
 
--- Function to continuously monitor and modify money/currency
+-- Function to continuously monitor and manipulate currency
 local function monitorAndChangeCurrency()
     local currencyRemotes = findCurrencyRemotes()  -- Find remotes
     local currencyStats = findCurrencyStats()      -- Find player stats
 
     -- Loop to continuously attempt to modify remotes or stats
     while true do
-        -- Modify via remotes
+        -- Modify currency via remotes
         for _, remote in ipairs(currencyRemotes) do
-            modifyCurrency(remote, 1000000)  -- Attempt to give 1 million currency
-            wait(1)  -- Avoid spamming the server too quickly
+            manipulateCurrency(remote, 1000000)  -- Attempt to give 1 million currency in smaller chunks
         end
         
-        -- Modify via player stats directly
+        -- Modify currency via player stats directly
         for _, stat in ipairs(currencyStats) do
-            modifyCurrency(stat, 1000000)  -- Add 1 million to the stat
+            manipulateCurrency(stat, 1000000)  -- Add 1 million to the stat
         end
 
-        wait(5)  -- General wait to avoid detection and overloading
+        wait(math.random(3, 7))  -- Random wait time between loops to avoid detection
     end
 end
 
--- Start the money/currency manipulation process
+-- Start the advanced money manipulation process
 monitorAndChangeCurrency()
