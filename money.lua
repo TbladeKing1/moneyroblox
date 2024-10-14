@@ -1,4 +1,4 @@
--- Super Advanced Undetectable Currency Manipulation Script for Roblox
+-- Super Advanced Currency Manipulation Script for Roblox
 
 -- Services
 local Players = game:GetService("Players")
@@ -29,86 +29,87 @@ local function findCurrencyRemotes()
     for _, obj in pairs(ReplicatedStorage:GetDescendants()) do
         if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
             -- Log and check if the remote is currency-related
-            print("Found remote: " .. obj.Name)
             if isCurrencyRelated(obj.Name) then
                 table.insert(remotes, obj)
-                print("Potential currency/purchase remote: " .. obj.Name)
+                print("Potential currency/purchase remote found: " .. obj.Name)
             end
         end
     end
     return remotes
 end
 
--- Advanced technique: Hook into legitimate transactions and replay them
-local function hookLegitimateTransactions(remote, amount)
+-- Hook into legitimate transactions and replay them
+local function replayLegitimateTransactions(remote, amount, delayRange)
     local success, errorMessage = pcall(function()
-        for i = 1, amount / 1000 do  -- Split the amount into small chunks
-            remote:FireServer(1000)  -- Mimic a legitimate small transaction
-            wait(math.random(0.5, 1.5))  -- Random delay to avoid detection
+        for i = 1, amount / 1000 do
+            remote:FireServer(1000)  -- Replay small chunks
+            wait(math.random(delayRange[1], delayRange[2]))  -- Random delay
         end
     end)
     if not success then
-        print("Error with legitimate transaction replay: " .. errorMessage)
+        warn("Error in transaction replay: " .. errorMessage)
     end
 end
 
--- AI-Like decision making for transaction retries and currency detection
+-- AI-Like decision making to retry failed currency manipulations
 local function monitorCurrencyChanges(remote, amount)
     local retries = 0
     while retries < 5 do
-        -- Detect if the server resets the currency (by checking leaderstats)
         local currencyStat = LocalPlayer:FindFirstChild("leaderstats") and LocalPlayer.leaderstats:FindFirstChild("Cash")
         if currencyStat then
-            print("Current currency: " .. currencyStat.Value)
+            print("Currency value: " .. currencyStat.Value)
             
-            -- Check if the server rolled back the change, if so, retry
+            -- Detect rollback and retry
             if currencyStat.Value < amount then
-                print("Server rolled back, retrying...")
-                hookLegitimateTransactions(remote, amount)
+                warn("Server rolled back currency. Retrying...")
+                replayLegitimateTransactions(remote, amount, {0.5, 1.5})
             else
-                print("Transaction successful, currency updated!")
+                print("Transaction successful. Currency updated!")
                 break
             end
         else
-            print("No currency stat found, skipping check...")
+            warn("No currency stat found, skipping...")
         end
-        
         retries = retries + 1
-        wait(math.random(10, 20))  -- Wait before retrying to avoid anti-cheat detection
+        wait(math.random(10, 20))  -- Random wait between retries
     end
 end
 
--- Function to dynamically scrape and analyze remotes
-local function scrapeAndAnalyzeRemotes()
-    local allRemotes = findCurrencyRemotes()
-    for _, remote in ipairs(allRemotes) do
+-- Scrape all remotes and analyze them for currency/purchase manipulation
+local function scrapeRemotesAndReplayTransactions(amount)
+    local remotes = findCurrencyRemotes()
+    for _, remote in ipairs(remotes) do
         print("Analyzing remote: " .. remote.Name)
-        
-        -- Hook into the legitimate remotes to replay and manipulate transactions
-        hookLegitimateTransactions(remote, 10000)  -- Test with 10k amount initially
-        
-        -- Monitor and retry if changes are reverted
-        monitorCurrencyChanges(remote, 10000)
+        replayLegitimateTransactions(remote, amount, {1, 2})
+        monitorCurrencyChanges(remote, amount)
     end
 end
 
--- Mimic user behavior to prevent detection (random actions)
+-- Mimic user behavior to prevent detection
 local function mimicUserBehavior()
     local actions = {
         function() LocalPlayer.Character.Humanoid:MoveTo(Vector3.new(math.random(-10, 10), 0, math.random(-10, 10))) end,
         function() print("Random delay...") wait(math.random(2, 5)) end,
-        function() print("Simulating user jump...") LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping) end
+        function() print("Simulating jump...") LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping) end
     }
+    
     while true do
-        -- Perform random actions to make the script harder to detect
         local action = actions[math.random(1, #actions)]
         action()
-        wait(math.random(5, 10))  -- Delay between random actions
+        wait(math.random(5, 10))  -- Delay between actions
     end
 end
 
--- Main process: Start scraping and analyzing remotes
-scrapeAndAnalyzeRemotes()
+-- Main function to run scraping and behavior concurrently
+local function runAdvancedScript()
+    -- Start scraping and manipulating remotes
+    spawn(function()
+        scrapeRemotesAndReplayTransactions(10000)  -- Try manipulating with 10k
+    end)
 
--- Start mimicking user behavior in parallel
-spawn(mimicUserBehavior)  -- Run in a separate thread
+    -- Simulate user behavior to avoid detection
+    spawn(mimicUserBehavior)
+end
+
+-- Start the advanced process
+runAdvancedScript()
